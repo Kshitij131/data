@@ -1,0 +1,5 @@
+ClientID,PriorityLevel,AttributesJSON,RequestedTaskIDs
+C1,3,"{""name"": ""test""}","T1,T2"
+C2,7,invalid json,T50
+C1,2,"{""id"": 123}",T3
+C4,4,another invalid,

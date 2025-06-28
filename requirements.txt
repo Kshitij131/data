@@ -1,27 +1,30 @@
 # FastAPI server
-fastapi==0.115.14
-uvicorn==0.30.5
+fastapi==0.104.1
+uvicorn==0.24.0
 
 # Azure AI Inference SDK
-azure-ai-inference==1.0.0b9
+azure-ai-inference==1.0.0b1
+azure-core==1.29.5
 
 # Data validation
-pydantic==2.7.4
+pydantic==2.4.2
 
 # FAISS for semantic search
-faiss-cpu==1.11.0
+faiss-cpu==1.7.4
 
 # Embeddings model
-sentence-transformers==2.6.0
+sentence-transformers==2.2.2
 
 # Environment variable loading
-python-dotenv==1.0.1
+python-dotenv==1.0.0
 
 # Streamlit UI
-streamlit==1.36.2
+streamlit==1.27.2
 
 # For API calls in frontend
-requests==2.32.3
+requests==2.31.0
 
 # Data processing
-numpy==2.2.6
+numpy==1.24.3
+pandas==2.0.3
+openpyxl==3.1.2

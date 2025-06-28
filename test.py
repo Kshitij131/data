@@ -1,17 +1,20 @@
 import os
 import requests
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load_dotenv()
-# token = os.getenv("11BKLPL3Y0Luz73EQd9aDW_yAxwVyOAXa0ys8kDXk62we4tXyD2rCZqSmG2cJ7Ao7bIA2R43DGS2dh2DRB")
+load_dotenv()
+token = os.getenv("GITHUB_TOKEN")
 
-# headers = {
-#     "Authorization": f"Bearer {token}",
-#     "Accept": "application/vnd.github+json"
-# }
+headers = {
+    "Authorization": f"Bearer {token}",
+    "Accept": "application/vnd.github+json"
+}
 
-# r = requests.get("https://api.github.com/user", headers=headers)
+response = requests.get("https://api.github.com/rate_limit", headers=headers)
+data = response.json()
 
-# print("Status Code:", r.status_code)
-# print("Response:", r.json())
-print("From os.environ directly:", os.environ.get("GITHUB_TOKEN"))
+core = data["rate"]
+print("🔋 Core Rate Limit Status:")
+print(f"  Limit: {core['limit']}")
+print(f"  Remaining: {core['remaining']}")
+print(f"  Resets At: {core['reset']}")

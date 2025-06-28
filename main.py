@@ -8,6 +8,8 @@ import json
 import pandas as pd
 from file_utils import process_excel_file, convert_to_json
 from typing import List, Dict, Any, Optional
+import os
+from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -158,6 +160,11 @@ def priority_weights(query: Query):
 async def upload_file(file: UploadFile = File(...)):
     ext = file.filename.split(".")[-1].lower()
     content = await file.read()
+    
+    # Save the uploaded file to a temporary location
+    temp_file_path = f"temp_{file.filename}"
+    with open(temp_file_path, "wb") as f:
+        f.write(content)
 
     try:
         # Process the file based on extension
@@ -176,18 +183,34 @@ async def upload_file(file: UploadFile = File(...)):
         # Preview first 5 rows
         preview = raw_data[:5] if len(raw_data) > 5 else raw_data
         
-        # Validate the data - try GPT first, then fall back to local validation
+        # Use our comprehensive file analysis
         if gpt_available:
             try:
-                # Always use GPT for validation when available
-                validation_result = gpt_agent.validate_data(data_json)
+                # Use GPT agent's file analysis capability
+                analysis_result = gpt_agent.analyze_file(temp_file_path)
+                
+                # Offer to fix the file if issues were found
+                fix_info = None
+                if analysis_result["status"] == "success" and analysis_result["summary"]["total_issues"] > 0:
+                    # Prepare but don't execute fix yet - this will be done on demand from frontend
+                    fix_info = {
+                        "available": True,
+                        "total_issues": analysis_result["summary"]["total_issues"],
+                        "fixed_file_name": f"{file.filename.split('.')[0]}_fixed.{ext}"
+                    }
+                
                 return {
                     "message": "✅ File uploaded and processed successfully!",
                     "preview": preview,
-                    "validation": validation_result,
+                    "analysis": analysis_result,
+                    "fix_info": fix_info,
+                    "temp_file_path": temp_file_path,
                     "using_gpt": True,
                     "using_local_validation": False
                 }
+            except Exception as e:
+                print(f"Error using GPT analysis: {e}")
+                # Fall back to basic validation
             except Exception as e:
                 print(f"GPT validation failed: {e}")
                 # Fall back to local validation only if GPT fails completely
@@ -214,3 +237,54 @@ async def upload_file(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"error": f"❌ Failed to process file: {str(e)}"}
+
+@app.post("/fix-file/")
+async def fix_file(request: dict):
+    """Fix issues in a previously uploaded file"""
+    try:
+        file_path = request.get("file_path")
+        if not file_path or not os.path.exists(file_path):
+            return {"error": "❌ Invalid file path or file not found"}
+        
+        # Use the GPT agent to fix the file
+        fix_result = gpt_agent.fix_file_errors(file_path)
+        
+        if fix_result["status"] == "success" and fix_result["fixed_file"]:
+            # Read the fixed file to return its content
+            fixed_file_path = fix_result["fixed_file"]
+            
+            if fixed_file_path.endswith(".csv"):
+                df_fixed = pd.read_csv(fixed_file_path)
+            elif fixed_file_path.endswith((".xlsx", ".xls")):
+                df_fixed = pd.read_excel(fixed_file_path)
+            else:
+                return {"error": "❌ Unknown file format after fixing"}
+                
+            fixed_preview = df_fixed.head(5).to_dict(orient="records")
+            
+            return {
+                "message": f"✅ Successfully fixed {len(fix_result['fixes_applied'])} issues in the file",
+                "fixed_file": os.path.basename(fixed_file_path),
+                "fixed_preview": fixed_preview,
+                "fixes_applied": fix_result["fixes_applied"],
+                "fixes_failed": fix_result["fixes_failed"],
+                "download_url": f"/download/{os.path.basename(fixed_file_path)}"
+            }
+        else:
+            return {"error": "❌ Failed to fix the file", "details": fix_result}
+            
+    except Exception as e:
+        return {"error": f"❌ Error fixing file: {str(e)}"}
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    """Download a fixed file"""
+    file_path = os.path.join(os.getcwd(), filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(
+        path=file_path, 
+        filename=filename,
+        media_type="application/octet-stream"
+    )
