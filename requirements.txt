@@ -1,0 +1,27 @@
+# FastAPI server
+fastapi==0.115.14
+uvicorn==0.30.5
+
+# OpenAI API
+openai==1.30.0
+
+# Data validation
+pydantic==2.7.4
+
+# FAISS for semantic search
+faiss-cpu==1.11.0
+
+# Embeddings model
+sentence-transformers==2.6.0
+
+# Environment variable loading
+python-dotenv==1.0.1
+
+# Streamlit UI
+streamlit==1.36.2
+
+# For API calls in frontend
+requests==2.32.3
+
+# Data processing
+numpy==2.2.6
