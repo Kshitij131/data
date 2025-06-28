@@ -1,21 +1,19 @@
 # Data Alchemist AI API
 
-AI-powered spreadsheet validation, search, rule generation & correction using OpenAI GPT or GitHub AI.
+AI-powered spreadsheet validation, search, rule generation & correction using GitHub AI via Azure AI Inference SDK.
 
 ## Setup
 
-1. Create a `.env` file with your API credentials:
+1. Create a `.env` file with your GitHub token credentials:
 
 ```
-# GitHub Token for accessing GitHub's hosted OpenAI models
+# GitHub Token for accessing GitHub's hosted AI models
+# IMPORTANT: Your token MUST have 'models:read' permission
 GITHUB_TOKEN=your_github_token_here
 
-# Since there might be access issues with GitHub AI, let's also keep the OpenAI option
-OPENAI_API_KEY=your_openai_api_key_here
-
-# GitHub AI Inference Endpoint
+# GitHub AI Inference Endpoint and Model
 GITHUB_AI_ENDPOINT=https://models.github.ai/inference
-GITHUB_AI_MODEL=openai/gpt-4.1
+GITHUB_AI_MODEL=meta/Meta-Llama-3.1-70B-Instruct
 ```
 
 2. Install dependencies:
@@ -24,15 +22,11 @@ GITHUB_AI_MODEL=openai/gpt-4.1
 pip install -r requirements.txt
 ```
 
-3. Set up the Azure AI Inference SDK (for GitHub AI):
+3. Test the setup:
 
 ```bash
-# On Windows
-setup_azure_sdk.bat
-
-# On Linux/Mac
-pip install azure-ai-inference
-python check_models.py
+# Test if your GitHub token and model access is working correctly
+python test_project.py
 ```
 
 ## Running the Application
@@ -53,12 +47,17 @@ streamlit run streamlit_app.py
 
 ## Features
 
-- AI-powered CSV header mapping
-- Advanced data validation with GPT/GitHub AI
-- Natural language search to JSON filter conversion
-- Data correction suggestions
+- AI-powered CSV/Excel file analysis and validation
+- Automatic error detection with severity classification
+- Intelligent fixes for common data issues:
+  - Duplicate IDs
+  - Invalid JSON
+  - Out-of-range values
+  - Invalid references
+  - Inconsistent text formatting
+- Natural language search to filter conversion
+- Priority profile generation for scheduling tasks
 - Rule generation from natural language
-- Priority profile generation
 
 ## AI Model Options
 
@@ -80,16 +79,20 @@ The application will automatically try all three methods in order and use the fi
 
 ## Troubleshooting
 
-Run the model checker to diagnose any issues:
+If you're having issues with the GitHub AI models, try:
+1. Ensuring your GitHub token has the right permissions (models:read)
+2. Check network connectivity to the GitHub AI endpoint
+3. Verify the model name is correct in your `.env` file
+
+## Project Cleanup
+
+To remove temporary and unnecessary files, run:
 
 ```bash
-python check_models.py
+python cleanup.py
 ```
 
-If you're having issues with the GitHub AI models, try:
-1. Ensuring your GitHub token has the right permissions
-2. Using a standard OpenAI API key as a fallback
-3. Checking network connectivity to the GitHub AI endpoint
+This will clean up test files, temporary files, and other non-essential files from the project.
 
 ## License
 

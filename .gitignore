@@ -2,3 +2,4 @@
 /.vscode
 /ai
 /__pycache__
+/gemini.py

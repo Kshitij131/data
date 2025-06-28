@@ -2,17 +2,18 @@
 fastapi==0.104.1
 uvicorn==0.24.0
 
-# Azure AI Inference SDK
+# Azure AI Inference SDK (for GitHub AI access)
 azure-ai-inference==1.0.0b1
 azure-core==1.29.5
 
-# Data validation
+# Data validation and processing
 pydantic==2.4.2
+pandas==2.0.3
+numpy==1.24.3
+openpyxl==3.1.2
 
 # FAISS for semantic search
 faiss-cpu==1.7.4
-
-# Embeddings model
 sentence-transformers==2.2.2
 
 # Environment variable loading
@@ -20,11 +21,4 @@ python-dotenv==1.0.0
 
 # Streamlit UI
 streamlit==1.27.2
-
-# For API calls in frontend
 requests==2.31.0
-
-# Data processing
-numpy==1.24.3
-pandas==2.0.3
-openpyxl==3.1.2
