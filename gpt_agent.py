@@ -1,15 +1,20 @@
 import os
 import json
-from openai import OpenAI
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import (
+    SystemMessage, 
+    UserMessage
+)
+from azure.core.credentials import AzureKeyCredential
 from faiss_store import FAISSSearcher
 from typing import Dict, List, Any, Union
 
 # Available GitHub AI models
 GITHUB_AI_MODELS = {
-    "GPT_4": "gpt-4",
-    "GPT_4_TURBO": "gpt-4-turbo",
-    "GPT_4_1": "gpt-4-1106-preview",  # Updated model name
-    "GPT_3_5_TURBO": "gpt-3.5-turbo",
+    "GPT_4": "openai/gpt-4",
+    "GPT_4_TURBO": "openai/gpt-4-turbo",
+    "GPT_4_1": "openai/gpt-4.1",
+    "GPT_3_5_TURBO": "openai/gpt-3.5-turbo",
 }
 
 class GPTAgent:
@@ -21,33 +26,39 @@ class GPTAgent:
             raise ValueError("GitHub token not found. Please set GITHUB_TOKEN in your environment variables.")
             
         # Get GitHub AI endpoint and model from environment variables
-        github_ai_endpoint ="https://models.github.ai/inference"
-        github_ai_model ="openai/gpt-4.1"
+        github_ai_endpoint = os.getenv("GITHUB_AI_ENDPOINT", "https://models.github.ai/inference")
+        github_ai_model = os.getenv("GITHUB_AI_MODEL", "openai/gpt-4.1")
         
-        # Initialize the OpenAI client with GitHub configuration
-        self.client = OpenAI(
-            base_url=github_ai_endpoint,
-            api_key=github_token
+        # GitHub AI requires the token to have "models:read" permission
+        # Make sure you have granted this permission to your token in GitHub settings
+        print("⚠️ Note: Your GitHub token must have 'models:read' permission to access GitHub AI models")
+        
+        self.client = ChatCompletionsClient(
+            endpoint=github_ai_endpoint,
+            credential=AzureKeyCredential(github_token)
         )
         
-        # Set model name
+        # Set model name - ensure it has the correct prefix
+        if not github_ai_model.startswith("openai/") and not github_ai_model.startswith("meta-llama/"):
+            github_ai_model = f"openai/{github_ai_model}"
+            
         self.model_name = github_ai_model
-        print(f"✅ Using GitHub AI model: {self.model_name} with OpenAI SDK")
+        print(f"✅ Using GitHub AI model: {self.model_name} with Azure AI Inference SDK")
         
         # Load FAISS for header and row search
         self.header_faiss = FAISSSearcher("headers")
         self.row_faiss = FAISSSearcher("rows")
 
     def _generate_content(self, prompt: str) -> str:
-        """Generate content using OpenAI client with GitHub AI"""
+        """Generate content using Azure AI Inference client with GitHub AI"""
         try:
-            # Use OpenAI client with GitHub AI configuration
-            response = self.client.chat.completions.create(
-                model=self.model_name,
+            # Use Azure AI Inference client with GitHub AI configuration
+            response = self.client.complete(
                 messages=[
-                    {"role": "system", "content": "You are a data validation and analysis assistant."},
-                    {"role": "user", "content": prompt}
+                    SystemMessage(content="You are a data validation and analysis assistant."),
+                    UserMessage(content=prompt)
                 ],
+                model=self.model_name,
                 temperature=0.1,  # Low temperature for more deterministic outputs
                 max_tokens=2048   # Adjust as needed
             )
